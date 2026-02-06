@@ -1,0 +1,113 @@
+# ----------------------------
+# Spatial inputs / AOI
+# ----------------------------
+aoi:
+  aoi: /mnt/c/Users/amehedi/Downloads/ml_debris/input/grizzly_sub_aoi.shp
+
+# ----------------------------
+# Data directories
+# ----------------------------
+paths:
+  input_dir: /mnt/c/Users/amehedi/Downloads/ml_debris/input
+  output_dir: /mnt/c/Users/amehedi/Downloads/ml_debris/output
+
+# ----------------------------
+# Model inputs (feature switches)
+# ----------------------------
+inputs:
+  soil:
+    k_factor: true
+  burn:
+    index: dNBR
+  topography:
+    elevation: true
+    slope: true
+    aspect: true
+  climate:
+    rainfall: true
+
+# ----------------------------
+# Target / label settings
+# ----------------------------
+target:
+  variable: debris_flow
+  type: binary        # binary | continuous
+  positive_value: 1
+
+# ----------------------------
+# Raster processing
+# ----------------------------
+raster:
+  target_res: 10   # meters
+  resampling_method: bilinear
+
+# ----------------------------
+# Fire metadata
+# ----------------------------
+fire:
+  name: Grizzly Creek #Bolt Creek
+  id: WA4772812134620220910
+  state: WA
+  year: 2020 #2022
+
+# ----------------------------
+# DEM (USGS 10m via bmi-topography)
+# ----------------------------
+dem:
+  source: bmi-topography
+  dem_type: USGS10m
+  output_format: GTiff
+  buffer_deg: 0.05
+  cache_dir: /mnt/c/Users/amehedi/Downloads/ml_debris/output/cache
+  api_key: "985ca66e17da97a20d0732c993597ea3"
+
+# ----------------------------
+# Burn severity (selectable source)
+# ----------------------------
+burn_severity:
+  source: local        # local | remote
+
+  local:
+    path: /mnt/c/Users/amehedi/Downloads/ml_debris/input
+    filename: pioneer_wa4818312053120240608_sbs.tif
+    resampling: nearest
+
+  remote:
+    base_url: https://edcintl.cr.usgs.gov/downloads/sciweb1/shared/MTBS_Fire/data/baer/
+    candidates:
+      - "{base_url}{fire_name_fmt}_sbs.zip"
+      - "{base_url}{fire_name_fmt}_{fire_id_fmt}_sbs.zip"
+    resampling: nearest
+
+# ----------------------------
+# Other feature rasters
+# ----------------------------
+feature_sources: 
+  rasters:
+    cec7_0_cm:
+      url: https://storage.googleapis.com/solus100pub/cec7_0_cm_p.tif
+      resampling: bilinear
+    anylithicdpt_cm:
+      url: https://storage.googleapis.com/solus100pub/anylithicdpt_cm_p.tif
+      resampling: bilinear
+    claytotal_0_cm:
+      url: https://storage.googleapis.com/solus100pub/claytotal_0_cm_p.tif
+      resampling: bilinear
+    ph1to1h2o_0_cm:
+      url: https://storage.googleapis.com/solus100pub/ph1to1h2o_0_cm_p.tif
+      resampling: bilinear
+    sandtotal_0_cm:
+      url: https://storage.googleapis.com/solus100pub/sandtotal_0_cm_p.tif
+      resampling: bilinear
+    silttotal_0_cm:
+      url: https://storage.googleapis.com/solus100pub/silttotal_0_cm_p.tif
+      resampling: bilinear
+    dbovendry_0_cm:
+      url: https://storage.googleapis.com/solus100pub/dbovendry_0_cm_p.tif
+      resampling: bilinear
+
+  landcover:
+    nlcd_2021:
+      url: https://www.mrlc.gov/downloads/sciweb1/shared/mrlc/data-bundles/Annual_NLCD_LndCov_2021_CU_C1V1.zip
+      resampling: nearest
+      unzip: true
