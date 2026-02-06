@@ -1,0 +1,73 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+.eggs/
+.pytest_cache/
+
+# Environments
+.venv/
+venv/
+ENV/
+.env
+
+# Jupyter / IPython
+.ipynb_checkpoints/
+notebook/.ipynb_checkpoints/
+notebook/cache/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Data / GIS / raster / point clouds
+# (large or generated artifacts)
+data/
+*.asc
+*.tif
+*.tiff
+*.bil
+*.bip
+*.bsq
+*.img
+*.grd
+*.sdat
+*.hdr
+*.tfw
+*.aux
+*.aux.xml
+*.ovr
+*.xml
+*.vrt
+*.las
+*.laz
+*.xyz
+*.asc.gz
+*.tif.gz
+*.zip
+*.7z
+*.tar
+*.tar.gz
+
+# Local cache/output
+notebook/landlab_ascii/
+notebook/cache/
+
+# Model artifacts / outputs
+*.ckpt
+*.pth
+*.h5
+*.joblib
+*.pkl
+*.pickle
+
+# Temporary
+*.tmp
+*.swp
+*~
