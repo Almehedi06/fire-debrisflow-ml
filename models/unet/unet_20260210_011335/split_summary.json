@@ -1,0 +1,12 @@
+{
+  "block_size": 128,
+  "min_valid_fraction": 0.9,
+  "n_test_blocks": 7,
+  "n_test_patches": 3,
+  "n_train_blocks": 29,
+  "n_train_patches": 17,
+  "n_val_blocks": 6,
+  "n_val_patches": 4,
+  "patch_size": 128,
+  "stride": 32
+}

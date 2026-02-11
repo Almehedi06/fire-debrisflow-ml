@@ -1,0 +1,26 @@
+{
+  "data": {
+    "dir": "/mnt/c/Users/amehedi/Downloads/ml_debris/output/thomas",
+    "exclude_names": [
+      "dem_pre.tif",
+      "dem_post.tif"
+    ],
+    "include_glob": "*.tif",
+    "target_name": "dem_diff.tif"
+  },
+  "model": {
+    "max_depth": null,
+    "min_samples_leaf": 1,
+    "n_estimators": 300,
+    "n_jobs": -1,
+    "random_state": 42
+  },
+  "output": {
+    "model_dir": "models/rf",
+    "run_prefix": "rf"
+  },
+  "split": {
+    "random_state": 42,
+    "test_size": 0.2
+  }
+}

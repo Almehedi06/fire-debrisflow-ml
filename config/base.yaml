@@ -2,14 +2,15 @@
 # Spatial inputs / AOI
 # ----------------------------
 aoi:
-  aoi: /mnt/c/Users/amehedi/Downloads/ml_debris/input/grizzly_sub_aoi.shp
+  aoi: /mnt/c/Users/amehedi/Downloads/ml_debris/input/thomas_sub_aoi.shp
 
-# ----------------------------
+# ------------------
+# ----------
 # Data directories
 # ----------------------------
 paths:
   input_dir: /mnt/c/Users/amehedi/Downloads/ml_debris/input
-  output_dir: /mnt/c/Users/amehedi/Downloads/ml_debris/output
+  output_dir: /mnt/c/Users/amehedi/Downloads/ml_debris/output/thomas
 
 # ----------------------------
 # Model inputs (feature switches)

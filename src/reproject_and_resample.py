@@ -7,6 +7,7 @@ import rasterio
 from rasterio.crs import CRS
 from rasterio.enums import Resampling
 from rasterio.mask import mask
+from rasterio.transform import array_bounds
 from rasterio.warp import calculate_default_transform, reproject, transform_geom
 import fiona
 
@@ -191,12 +192,9 @@ def convert_to_ascii(tif_path: str, out_dir: str, template_meta: dict | None = N
         width = meta["width"]
         height = meta["height"]
 
-        xllcorner = transform[2]
-        yllcorner = (
-            transform[5] + transform[4] * (height - 1)
-            if transform[4] < 0
-            else transform[5] - transform[4] * (height - 1)
-        )
+        west, south, _, _ = array_bounds(height, width, transform)
+        xllcorner = west
+        yllcorner = south
         cellsize = abs(transform[0])
 
         nodata_value = src.nodata if src.nodata is not None else -9999.0

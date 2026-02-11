@@ -1,0 +1,324 @@
+{
+  "history": [
+    {
+      "epoch": 1,
+      "train_loss": NaN,
+      "val_loss": NaN,
+      "val_mae": NaN,
+      "val_r2": NaN,
+      "val_rmse": NaN
+    },
+    {
+      "epoch": 2,
+      "train_loss": NaN,
+      "val_loss": NaN,
+      "val_mae": NaN,
+      "val_r2": NaN,
+      "val_rmse": NaN
+    },
+    {
+      "epoch": 3,
+      "train_loss": NaN,
+      "val_loss": NaN,
+      "val_mae": NaN,
+      "val_r2": NaN,
+      "val_rmse": NaN
+    },
+    {
+      "epoch": 4,
+      "train_loss": NaN,
+      "val_loss": NaN,
+      "val_mae": NaN,
+      "val_r2": NaN,
+      "val_rmse": NaN
+    },
+    {
+      "epoch": 5,
+      "train_loss": NaN,
+      "val_loss": NaN,
+      "val_mae": NaN,
+      "val_r2": NaN,
+      "val_rmse": NaN
+    },
+    {
+      "epoch": 6,
+      "train_loss": NaN,
+      "val_loss": NaN,
+      "val_mae": NaN,
+      "val_r2": NaN,
+      "val_rmse": NaN
+    },
+    {
+      "epoch": 7,
+      "train_loss": NaN,
+      "val_loss": NaN,
+      "val_mae": NaN,
+      "val_r2": NaN,
+      "val_rmse": NaN
+    },
+    {
+      "epoch": 8,
+      "train_loss": NaN,
+      "val_loss": NaN,
+      "val_mae": NaN,
+      "val_r2": NaN,
+      "val_rmse": NaN
+    },
+    {
+      "epoch": 9,
+      "train_loss": NaN,
+      "val_loss": NaN,
+      "val_mae": NaN,
+      "val_r2": NaN,
+      "val_rmse": NaN
+    },
+    {
+      "epoch": 10,
+      "train_loss": NaN,
+      "val_loss": NaN,
+      "val_mae": NaN,
+      "val_r2": NaN,
+      "val_rmse": NaN
+    },
+    {
+      "epoch": 11,
+      "train_loss": NaN,
+      "val_loss": NaN,
+      "val_mae": NaN,
+      "val_r2": NaN,
+      "val_rmse": NaN
+    },
+    {
+      "epoch": 12,
+      "train_loss": NaN,
+      "val_loss": NaN,
+      "val_mae": NaN,
+      "val_r2": NaN,
+      "val_rmse": NaN
+    },
+    {
+      "epoch": 13,
+      "train_loss": NaN,
+      "val_loss": NaN,
+      "val_mae": NaN,
+      "val_r2": NaN,
+      "val_rmse": NaN
+    },
+    {
+      "epoch": 14,
+      "train_loss": NaN,
+      "val_loss": NaN,
+      "val_mae": NaN,
+      "val_r2": NaN,
+      "val_rmse": NaN
+    },
+    {
+      "epoch": 15,
+      "train_loss": NaN,
+      "val_loss": NaN,
+      "val_mae": NaN,
+      "val_r2": NaN,
+      "val_rmse": NaN
+    },
+    {
+      "epoch": 16,
+      "train_loss": NaN,
+      "val_loss": NaN,
+      "val_mae": NaN,
+      "val_r2": NaN,
+      "val_rmse": NaN
+    },
+    {
+      "epoch": 17,
+      "train_loss": NaN,
+      "val_loss": NaN,
+      "val_mae": NaN,
+      "val_r2": NaN,
+      "val_rmse": NaN
+    },
+    {
+      "epoch": 18,
+      "train_loss": NaN,
+      "val_loss": NaN,
+      "val_mae": NaN,
+      "val_r2": NaN,
+      "val_rmse": NaN
+    },
+    {
+      "epoch": 19,
+      "train_loss": NaN,
+      "val_loss": NaN,
+      "val_mae": NaN,
+      "val_r2": NaN,
+      "val_rmse": NaN
+    },
+    {
+      "epoch": 20,
+      "train_loss": NaN,
+      "val_loss": NaN,
+      "val_mae": NaN,
+      "val_r2": NaN,
+      "val_rmse": NaN
+    },
+    {
+      "epoch": 21,
+      "train_loss": NaN,
+      "val_loss": NaN,
+      "val_mae": NaN,
+      "val_r2": NaN,
+      "val_rmse": NaN
+    },
+    {
+      "epoch": 22,
+      "train_loss": NaN,
+      "val_loss": NaN,
+      "val_mae": NaN,
+      "val_r2": NaN,
+      "val_rmse": NaN
+    },
+    {
+      "epoch": 23,
+      "train_loss": NaN,
+      "val_loss": NaN,
+      "val_mae": NaN,
+      "val_r2": NaN,
+      "val_rmse": NaN
+    },
+    {
+      "epoch": 24,
+      "train_loss": NaN,
+      "val_loss": NaN,
+      "val_mae": NaN,
+      "val_r2": NaN,
+      "val_rmse": NaN
+    },
+    {
+      "epoch": 25,
+      "train_loss": NaN,
+      "val_loss": NaN,
+      "val_mae": NaN,
+      "val_r2": NaN,
+      "val_rmse": NaN
+    },
+    {
+      "epoch": 26,
+      "train_loss": NaN,
+      "val_loss": NaN,
+      "val_mae": NaN,
+      "val_r2": NaN,
+      "val_rmse": NaN
+    },
+    {
+      "epoch": 27,
+      "train_loss": NaN,
+      "val_loss": NaN,
+      "val_mae": NaN,
+      "val_r2": NaN,
+      "val_rmse": NaN
+    },
+    {
+      "epoch": 28,
+      "train_loss": NaN,
+      "val_loss": NaN,
+      "val_mae": NaN,
+      "val_r2": NaN,
+      "val_rmse": NaN
+    },
+    {
+      "epoch": 29,
+      "train_loss": NaN,
+      "val_loss": NaN,
+      "val_mae": NaN,
+      "val_r2": NaN,
+      "val_rmse": NaN
+    },
+    {
+      "epoch": 30,
+      "train_loss": NaN,
+      "val_loss": NaN,
+      "val_mae": NaN,
+      "val_r2": NaN,
+      "val_rmse": NaN
+    },
+    {
+      "epoch": 31,
+      "train_loss": NaN,
+      "val_loss": NaN,
+      "val_mae": NaN,
+      "val_r2": NaN,
+      "val_rmse": NaN
+    },
+    {
+      "epoch": 32,
+      "train_loss": NaN,
+      "val_loss": NaN,
+      "val_mae": NaN,
+      "val_r2": NaN,
+      "val_rmse": NaN
+    },
+    {
+      "epoch": 33,
+      "train_loss": NaN,
+      "val_loss": NaN,
+      "val_mae": NaN,
+      "val_r2": NaN,
+      "val_rmse": NaN
+    },
+    {
+      "epoch": 34,
+      "train_loss": NaN,
+      "val_loss": NaN,
+      "val_mae": NaN,
+      "val_r2": NaN,
+      "val_rmse": NaN
+    },
+    {
+      "epoch": 35,
+      "train_loss": NaN,
+      "val_loss": NaN,
+      "val_mae": NaN,
+      "val_r2": NaN,
+      "val_rmse": NaN
+    },
+    {
+      "epoch": 36,
+      "train_loss": NaN,
+      "val_loss": NaN,
+      "val_mae": NaN,
+      "val_r2": NaN,
+      "val_rmse": NaN
+    },
+    {
+      "epoch": 37,
+      "train_loss": NaN,
+      "val_loss": NaN,
+      "val_mae": NaN,
+      "val_r2": NaN,
+      "val_rmse": NaN
+    },
+    {
+      "epoch": 38,
+      "train_loss": NaN,
+      "val_loss": NaN,
+      "val_mae": NaN,
+      "val_r2": NaN,
+      "val_rmse": NaN
+    },
+    {
+      "epoch": 39,
+      "train_loss": NaN,
+      "val_loss": NaN,
+      "val_mae": NaN,
+      "val_r2": NaN,
+      "val_rmse": NaN
+    },
+    {
+      "epoch": 40,
+      "train_loss": NaN,
+      "val_loss": NaN,
+      "val_mae": NaN,
+      "val_r2": NaN,
+      "val_rmse": NaN
+    }
+  ]
+}
