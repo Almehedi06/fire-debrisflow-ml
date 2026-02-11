@@ -1,0 +1,15 @@
+{
+  "data_dir": "/mnt/c/Users/amehedi/Downloads/ml_debris/output/thomas",
+  "feature_order_path": "models/rf/rf_20260210_001650/feature_order.json",
+  "grid_resolution": 50,
+  "max_samples": 50000,
+  "model_path": "models/rf/rf_20260210_001650/model.joblib",
+  "random_state": 42,
+  "selected_features": [
+    "topographic__elevation",
+    "soil__thickness"
+  ],
+  "split_random_state": 42,
+  "split_test_size": 0.2,
+  "target_name": "dem_diff.tif"
+}
