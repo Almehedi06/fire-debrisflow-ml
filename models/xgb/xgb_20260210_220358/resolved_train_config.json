@@ -1,0 +1,39 @@
+{
+  "data": {
+    "dir": "/mnt/c/Users/amehedi/Downloads/ml_debris/output/thomas",
+    "exclude_contains": [
+      "pred"
+    ],
+    "exclude_names": [
+      "dem_pre.tif",
+      "dem_post.tif"
+    ],
+    "include_glob": "*.tif",
+    "target_name": "dem_diff.tif"
+  },
+  "model": {
+    "colsample_bytree": 0.9,
+    "gamma": 0.1,
+    "learning_rate": 0.03,
+    "max_bin": 256,
+    "max_depth": 6,
+    "min_child_weight": 5.0,
+    "n_estimators": 1200,
+    "n_jobs": -1,
+    "random_state": 42,
+    "reg_alpha": 0.0,
+    "reg_lambda": 2.0,
+    "subsample": 0.9,
+    "tree_method": "hist",
+    "type": "xgb",
+    "verbosity": 0
+  },
+  "output": {
+    "model_dir": "models/xgb",
+    "run_prefix": "xgb"
+  },
+  "split": {
+    "random_state": 42,
+    "test_size": 0.2
+  }
+}

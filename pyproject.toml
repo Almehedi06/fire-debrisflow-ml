@@ -1,0 +1,57 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fire-debrisflow-ml"
+version = "0.1.0"
+description = "Postfire debris-flow geospatial processing and ML tooling."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "numpy>=1.24",
+  "pyyaml>=6.0",
+  "requests>=2.31",
+]
+
+[project.optional-dependencies]
+soil = [
+  "rasterio>=1.3",
+  "fiona>=1.9",
+  "geopandas>=0.14",
+  "shapely>=2.0",
+  "pyproj>=3.6",
+  "landlab>=2.8",
+  "bmi-topography>=0.5",
+]
+ml = [
+  "scikit-learn>=1.3",
+  "joblib>=1.3",
+  "xgboost>=2.0",
+]
+deep = [
+  "torch>=2.2",
+]
+viz = [
+  "matplotlib>=3.8",
+]
+dev = [
+  "pytest>=8.0",
+  "ruff>=0.6",
+]
+
+[project.scripts]
+soil-fetch = "soil_data.cli_fetch:main"
+soil-harmonize = "soil_data.cli_harmonize:main"
+soil-run = "soil_data.cli_run:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+py-modules = ["dem", "downloads", "reproject_and_resample"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["ml*", "deep*", "soil_data*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

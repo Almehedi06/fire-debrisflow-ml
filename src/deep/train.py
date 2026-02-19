@@ -2,9 +2,11 @@ from __future__ import annotations
 
 import copy
 from dataclasses import dataclass
+from typing import Callable
 
 import numpy as np
 
+from deep.cnn import SimpleCNNRegressor
 from deep.data import (
     RasterPatchDataset,
     build_block_windows,
@@ -76,6 +78,19 @@ def _masked_mse_loss(pred, target, mask):
     return masked.sum() / denom
 
 
+def _masked_huber_loss(pred, target, mask, delta: float):
+    import torch
+
+    abs_diff = torch.abs(pred - target)
+    # Smooth L1 with configurable transition point.
+    loss = torch.where(abs_diff < delta, 0.5 * (abs_diff**2) / delta, abs_diff - 0.5 * delta)
+    masked = loss * mask
+    denom = mask.sum()
+    if denom.item() <= 0:
+        return torch.tensor(0.0, device=pred.device, dtype=pred.dtype)
+    return masked.sum() / denom
+
+
 def _evaluate_loader(model, loader, device: str) -> tuple[float, dict]:
     import torch
 
@@ -117,22 +132,13 @@ def _evaluate_loader(model, loader, device: str) -> tuple[float, dict]:
     return float(np.mean(losses)) if losses else float("nan"), metrics
 
 
-def train_unet_regression(
-    x: np.ndarray,
+def _prepare_patch_splits(
     y: np.ndarray,
     valid_mask: np.ndarray,
-    config: dict,
-) -> TrainArtifacts:
-    import torch
-    from torch.utils.data import DataLoader
-
-    split_cfg = config.get("split", {})
-    train_cfg = config.get("training", {})
-    model_cfg = config.get("model", {})
-
+    split_cfg: dict,
+    train_cfg: dict,
+) -> dict:
     random_state = int(split_cfg.get("random_state", 42))
-    _set_seed(random_state)
-
     patch_size = int(train_cfg.get("patch_size", 128))
     stride = int(train_cfg.get("stride", 64))
     block_size = int(split_cfg.get("block_size", 256))
@@ -176,6 +182,44 @@ def train_unet_regression(
     if not test_origins:
         raise ValueError("No test patches were created. Adjust block/patch settings.")
 
+    return {
+        "patch_size": patch_size,
+        "stride": stride,
+        "block_size": block_size,
+        "min_valid_fraction": min_valid_fraction,
+        "split_windows": split_windows,
+        "train_origins": train_origins,
+        "val_origins": val_origins,
+        "test_origins": test_origins,
+    }
+
+
+def _train_patch_regression(
+    x: np.ndarray,
+    y: np.ndarray,
+    valid_mask: np.ndarray,
+    config: dict,
+    model_builder: Callable[[int, dict], object],
+) -> TrainArtifacts:
+    import torch
+    from torch.utils.data import DataLoader
+
+    split_cfg = config.get("split", {})
+    train_cfg = config.get("training", {})
+
+    random_state = int(split_cfg.get("random_state", 42))
+    _set_seed(random_state)
+
+    split_setup = _prepare_patch_splits(y, valid_mask, split_cfg, train_cfg)
+    patch_size = split_setup["patch_size"]
+    stride = split_setup["stride"]
+    block_size = split_setup["block_size"]
+    min_valid_fraction = split_setup["min_valid_fraction"]
+    split_windows = split_setup["split_windows"]
+    train_origins = split_setup["train_origins"]
+    val_origins = split_setup["val_origins"]
+    test_origins = split_setup["test_origins"]
+
     train_region_mask = np.zeros_like(valid_mask, dtype=bool)
     for w in split_windows["train"]:
         train_region_mask[w.row0 : w.row1, w.col0 : w.col1] = True
@@ -196,15 +240,20 @@ def train_unet_regression(
     test_loader = DataLoader(test_ds, batch_size=batch_size, shuffle=False)
 
     device = "cpu"
-    model = UNetRegressor(
-        in_channels=int(x.shape[0]),
-        base_channels=int(model_cfg.get("base_channels", 32)),
-    ).to(device)
+    model_cfg = config.get("model", {})
+    model = model_builder(int(x.shape[0]), model_cfg).to(device)
     optimizer = torch.optim.Adam(
         model.parameters(),
         lr=float(train_cfg.get("learning_rate", 1e-3)),
         weight_decay=float(train_cfg.get("weight_decay", 0.0)),
     )
+    loss_name = str(train_cfg.get("loss", "mse")).lower()
+    huber_delta = float(train_cfg.get("huber_delta", 1.0))
+
+    def _train_loss(out, yb, mb):
+        if loss_name == "huber":
+            return _masked_huber_loss(out, yb, mb, delta=huber_delta)
+        return _masked_mse_loss(out, yb, mb)
 
     best_state = None
     best_val_rmse = float("inf")
@@ -221,7 +270,7 @@ def train_unet_regression(
             mb = mb.to(device)
             optimizer.zero_grad(set_to_none=True)
             out = model(xb)
-            loss = _masked_mse_loss(out, yb, mb)
+            loss = _train_loss(out, yb, mb)
             loss.backward()
             optimizer.step()
             train_losses.append(float(loss.item()))
@@ -272,4 +321,47 @@ def train_unet_regression(
         split_summary=split_summary,
         norm_mean=norm_mean,
         norm_std=norm_std,
+    )
+
+
+def train_unet_regression(
+    x: np.ndarray,
+    y: np.ndarray,
+    valid_mask: np.ndarray,
+    config: dict,
+) -> TrainArtifacts:
+    def _builder(in_channels: int, model_cfg: dict) -> UNetRegressor:
+        return UNetRegressor(
+            in_channels=in_channels,
+            base_channels=int(model_cfg.get("base_channels", 32)),
+        )
+
+    return _train_patch_regression(
+        x=x,
+        y=y,
+        valid_mask=valid_mask,
+        config=config,
+        model_builder=_builder,
+    )
+
+
+def train_cnn_regression(
+    x: np.ndarray,
+    y: np.ndarray,
+    valid_mask: np.ndarray,
+    config: dict,
+) -> TrainArtifacts:
+    def _builder(in_channels: int, model_cfg: dict) -> SimpleCNNRegressor:
+        return SimpleCNNRegressor(
+            in_channels=in_channels,
+            hidden_channels=int(model_cfg.get("hidden_channels", 64)),
+            num_layers=int(model_cfg.get("num_layers", 5)),
+        )
+
+    return _train_patch_regression(
+        x=x,
+        y=y,
+        valid_mask=valid_mask,
+        config=config,
+        model_builder=_builder,
     )

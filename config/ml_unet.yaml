@@ -2,9 +2,6 @@ data:
   dir: /mnt/c/Users/amehedi/Downloads/ml_debris/output/thomas
   target_name: dem_diff.tif
   include_glob: "*.tif"
-  include_names:
-    - topographic__elevation.tif
-    - soil__thickness.tif
   exclude_contains:
     - pred
   exclude_names:
@@ -12,24 +9,26 @@ data:
     - dem_post.tif
 
 split:
-  train_size: 0.7
-  val_size: 0.15
-  test_size: 0.15
-  block_size: 128
+  train_size: 0.6
+  val_size: 0.20
+  test_size: 0.20
+  block_size: 32
   random_state: 42
 
 model:
   type: unet
-  base_channels: 32
+  base_channels: 16
 
 training:
-  patch_size: 128
-  stride: 32
-  min_valid_fraction: 0.9
-  batch_size: 8
-  epochs: 40
-  learning_rate: 0.001
-  weight_decay: 0.0
+  patch_size: 8
+  stride: 8
+  min_valid_fraction: 0.1
+  batch_size: 16
+  epochs: 120
+  learning_rate: 0.0003
+  weight_decay: 0.0001
+  loss: huber
+  huber_delta: 0.5
 
 output:
   model_dir: models/unet

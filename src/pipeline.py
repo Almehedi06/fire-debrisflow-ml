@@ -110,8 +110,9 @@ def build_sources_from_config(cfg: dict) -> list[SourceSpec]:
 
     bs = cfg.get("burn_severity", {})
     src = bs.get("source", "local").lower()
+    local_path = os.path.join(bs["local"]["path"], bs["local"]["filename"])
+
     if src == "local":
-        local_path = os.path.join(bs["local"]["path"], bs["local"]["filename"])
         sources.append(
             SourceSpec(
                 key="burn_severity",
@@ -119,11 +120,11 @@ def build_sources_from_config(cfg: dict) -> list[SourceSpec]:
                 resampling=bs["local"].get("resampling", "nearest"),
             )
         )
-    else:
+    elif src in {"remote", "remote_then_local", "auto"}:
         base_url = bs["remote"]["base_url"]
         fire_name_fmt = cfg["fire"]["name"].lower().replace(" ", "_")
         fire_id_fmt = cfg["fire"]["id"].lower()
-        candidates = [
+        remote_candidates = [
             pattern.format(
                 base_url=base_url,
                 fire_name_fmt=fire_name_fmt,
@@ -131,13 +132,23 @@ def build_sources_from_config(cfg: dict) -> list[SourceSpec]:
             )
             for pattern in bs["remote"]["candidates"]
         ]
+        all_candidates = (
+            remote_candidates + [local_path]
+            if src in {"remote_then_local", "auto"}
+            else remote_candidates
+        )
         sources.append(
             SourceSpec(
                 key="burn_severity",
-                uri=candidates,
+                uri=all_candidates,
                 resampling=bs["remote"].get("resampling", "nearest"),
                 unzip=True,
             )
+        )
+    else:
+        raise ValueError(
+            "Unsupported burn_severity.source="
+            f"{src!r}. Expected one of: local, remote, remote_then_local, auto."
         )
 
     return sources
@@ -342,6 +353,13 @@ def run_landlab_pipeline(cfg: dict, outputs: dict, strict: bool = True):
             extra_close_values=spec.extra_close_values,
             rename_file=spec.rename_file,
             transform=spec.transform,
+        )
+        # Persist canonical values from the grid so scaled/transformed fields
+        # (e.g., soil__thickness from cm -> m) are reflected in output ASCII.
+        write_ascii_field(
+            os.path.join(output_dir, f"{spec.field_name}.asc"),
+            grid,
+            spec.field_name,
         )
 
     landcover_keys = list(cfg.get("feature_sources", {}).get("landcover", {}).keys())

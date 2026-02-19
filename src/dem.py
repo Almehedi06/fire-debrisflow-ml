@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 import geopandas as gpd
@@ -11,6 +12,8 @@ def fetch_dem(aoi_shapefile: str, dem_cfg: dict, output_dir: str) -> Path:
     west, south, east, north = bounds
     buffer_deg = dem_cfg.get("buffer_deg", 0.05)
 
+    api_key = dem_cfg.get("api_key") or os.getenv("USGS_TOPO_API_KEY")
+
     topo = Topography(
         dem_type=dem_cfg.get("dem_type", "USGS10m"),
         south=south - buffer_deg,
@@ -19,6 +22,6 @@ def fetch_dem(aoi_shapefile: str, dem_cfg: dict, output_dir: str) -> Path:
         east=east + buffer_deg,
         output_format=dem_cfg.get("output_format", "GTiff"),
         cache_dir=dem_cfg.get("cache_dir", output_dir),
-        api_key=dem_cfg.get("api_key"),
+        api_key=api_key,
     )
     return Path(topo.fetch())

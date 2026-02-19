@@ -24,6 +24,17 @@ def _read_band(path: str | Path) -> tuple[np.ndarray, float | None]:
     return arr, nodata
 
 
+def _read_band_and_invalid_mask(path: str | Path) -> tuple[np.ndarray, np.ndarray]:
+    arr, nodata = _read_band(path)
+    invalid = ~np.isfinite(arr)
+    if nodata is not None:
+        invalid |= arr == nodata
+    # Handle common sentinels when nodata metadata is missing.
+    invalid |= arr == -9999.0
+    invalid |= np.abs(arr) > 1e20
+    return arr, invalid
+
+
 def load_feature_target_stack(
     feature_paths: list[str | Path],
     target_path: str | Path,
@@ -33,18 +44,14 @@ def load_feature_target_stack(
 
     assert_same_grid(target_path, feature_paths)
 
-    target_arr, target_nodata = _read_band(target_path)
-    invalid = np.isnan(target_arr)
-    if target_nodata is not None:
-        invalid |= target_arr == target_nodata
+    target_arr, target_invalid = _read_band_and_invalid_mask(target_path)
+    invalid = target_invalid.copy()
 
     feature_arrays: list[np.ndarray] = []
     for fp in feature_paths:
-        arr, nodata = _read_band(fp)
+        arr, arr_invalid = _read_band_and_invalid_mask(fp)
         feature_arrays.append(arr)
-        invalid |= np.isnan(arr)
-        if nodata is not None:
-            invalid |= arr == nodata
+        invalid |= arr_invalid
 
     x = np.stack(feature_arrays, axis=0).astype("float32")  # [C, H, W]
     y = target_arr.astype("float32")  # [H, W]
@@ -73,11 +80,8 @@ def load_feature_stack(feature_paths: list[str | Path]) -> dict:
     feature_arrays: list[np.ndarray] = []
     invalid = None
     for fp in feature_paths:
-        arr, nodata = _read_band(fp)
+        arr, arr_invalid = _read_band_and_invalid_mask(fp)
         feature_arrays.append(arr)
-        arr_invalid = np.isnan(arr)
-        if nodata is not None:
-            arr_invalid |= arr == nodata
         invalid = arr_invalid.copy() if invalid is None else (invalid | arr_invalid)
 
     if invalid is None:
@@ -175,11 +179,13 @@ class RasterPatchDataset:
         self,
         x: np.ndarray,
         y: np.ndarray,
+        valid_mask: np.ndarray,
         origins: list[tuple[int, int]],
         patch_size: int,
     ) -> None:
         self.x = x
         self.y = y
+        self.valid_mask = valid_mask
         self.origins = origins
         self.patch_size = patch_size
 
@@ -193,8 +199,9 @@ class RasterPatchDataset:
         ps = self.patch_size
         x_patch = self.x[:, r : r + ps, c : c + ps]
         y_patch = self.y[r : r + ps, c : c + ps]
+        m_patch = self.valid_mask[r : r + ps, c : c + ps]
         return (
             torch.from_numpy(x_patch).float(),
             torch.from_numpy(y_patch[None, :, :]).float(),
+            torch.from_numpy(m_patch[None, :, :].astype("float32")).float(),
         )
-

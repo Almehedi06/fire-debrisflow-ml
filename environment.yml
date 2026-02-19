@@ -1,0 +1,22 @@
+name: fire-debrisflow-ml
+channels:
+  - conda-forge
+dependencies:
+  - python=3.10
+  - pip
+  - numpy
+  - pyyaml
+  - requests
+  - rasterio
+  - fiona
+  - geopandas
+  - shapely
+  - pyproj
+  - landlab
+  - bmi-topography
+  - scikit-learn
+  - matplotlib
+  - joblib
+  - xgboost
+  - pytorch
+  - pytest

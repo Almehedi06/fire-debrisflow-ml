@@ -1,0 +1,35 @@
+data:
+  dir: /mnt/c/Users/amehedi/Downloads/ml_debris/output/thomas
+  target_name: dem_diff.tif
+  include_glob: "*.tif"
+  exclude_contains:
+    - pred
+  exclude_names:
+    - dem_pre.tif
+    - dem_post.tif
+
+split:
+  train_size: 0.7
+  val_size: 0.15
+  test_size: 0.15
+  block_size: 128
+  random_state: 42
+
+model:
+  type: unet
+  base_channels: 16
+
+training:
+  patch_size: 64
+  stride: 16
+  min_valid_fraction: 0.2
+  batch_size: 16
+  epochs: 120
+  learning_rate: 0.0003
+  weight_decay: 0.0001
+  loss: huber
+  huber_delta: 0.5
+
+output:
+  model_dir: models/unet
+  run_prefix: unet

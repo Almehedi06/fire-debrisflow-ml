@@ -1,0 +1,40 @@
+{
+  "data": {
+    "dir": "/mnt/c/Users/amehedi/Downloads/ml_debris/output/thomas",
+    "exclude_contains": [
+      "pred"
+    ],
+    "exclude_names": [
+      "dem_pre.tif",
+      "dem_post.tif"
+    ],
+    "include_glob": "*.tif",
+    "target_name": "dem_diff.tif"
+  },
+  "model": {
+    "base_channels": 16,
+    "type": "unet"
+  },
+  "output": {
+    "model_dir": "models/unet",
+    "run_prefix": "unet"
+  },
+  "split": {
+    "block_size": 128,
+    "random_state": 42,
+    "test_size": 0.15,
+    "train_size": 0.7,
+    "val_size": 0.15
+  },
+  "training": {
+    "batch_size": 16,
+    "epochs": 120,
+    "huber_delta": 0.5,
+    "learning_rate": 0.0003,
+    "loss": "huber",
+    "min_valid_fraction": 0.2,
+    "patch_size": 64,
+    "stride": 16,
+    "weight_decay": 0.0001
+  }
+}
