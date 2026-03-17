@@ -18,6 +18,7 @@ Modular pipeline for postfire raster processing (DEM, soils, burn severity, land
 ## Install
 
 `environment.yml` is the canonical project environment for this repo.
+Use it for full repo setup. `environment.ci.yml` is a lean CI environment, not the recommended user environment.
 
 Conda (recommended):
 
@@ -63,6 +64,29 @@ Pip (if your system geospatial stack is already available):
 ```bash
 pip install -r requirements.txt
 ```
+
+Editable pip install from the repo root:
+
+```bash
+pip install -e ".[soil,ml,deep,viz,dev]"
+```
+
+This repo's base `pyproject.toml` dependency set is intentionally minimal. For a full local install, use `environment.yml`, `requirements.txt`, or the pip extras command above.
+
+## Getting Started
+
+Recommended setup for a new machine:
+
+```bash
+git clone <your-repo-url>
+cd fire-debrisflow-ml
+conda env create -f environment.yml
+conda activate fire-debrisflow-ml
+python -m pytest -q tests
+cp config/base.example.yaml config/base.yaml
+```
+
+Then edit `config/base.yaml` for your machine-specific paths and data sources.
 
 ## Quick Start
 

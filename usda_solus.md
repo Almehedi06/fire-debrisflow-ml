@@ -52,6 +52,26 @@ Pip (if your system already has geospatial prerequisites):
 pip install -r requirements.txt
 ```
 
+## Soil-Only Getting Started
+
+Recommended path for a new machine:
+
+```bash
+git clone <your-repo-url>
+cd fire-debrisflow-ml
+conda env create -f environment.yml
+conda activate fire-debrisflow-ml
+python -m pytest -q tests
+cp config/base.example.yaml config/base.yaml
+```
+
+Then:
+
+1. Edit `config/base.yaml` so `aoi.aoi` points to your AOI shapefile.
+2. Set `paths.output_dir` to your desired output location.
+3. If you already have a DEM/grid to match, keep its path ready for `--template`.
+4. Run one of the soil commands below depending on whether you want fetch-only, harmonize-only, or both.
+
 ## Workflow Design
 
 There are two explicit stages plus one convenience wrapper:
