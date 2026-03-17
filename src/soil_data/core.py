@@ -10,6 +10,13 @@ import geopandas as gpd
 import rasterio
 import yaml
 
+from preflight import (
+    ensure_output_dir_writable,
+    load_and_validate_aoi,
+    validate_aoi_overlaps_raster,
+    validate_raster_path,
+)
+
 
 MANIFEST_VERSION = "1.0"
 
@@ -137,6 +144,16 @@ def resolve_output_dir(output_dir_arg: str | None, cfg: dict) -> Path:
     out_dir = Path(out_dir_raw)
     out_dir.mkdir(parents=True, exist_ok=True)
     return out_dir
+
+
+def _validate_local_source_for_aoi(aoi_path: Path, uri: str, *, label: str) -> None:
+    local_path = Path(uri)
+    if not local_path.exists():
+        raise FileNotFoundError(f"{label} not found: {local_path}")
+    if local_path.suffix.lower() == ".zip":
+        return
+    validate_raster_path(local_path, label=label)
+    validate_aoi_overlaps_raster(aoi_path, local_path, label=label)
 
 
 def _infer_utm_crs(aoi_path: Path) -> str:
@@ -312,7 +329,11 @@ def fetch_soil_layers(
             ) from exc
         raise
 
-    output_dir.mkdir(parents=True, exist_ok=True)
+    load_and_validate_aoi(aoi_path)
+    ensure_output_dir_writable(output_dir)
+    for spec in specs:
+        if not spec.url.startswith("http"):
+            _validate_local_source_for_aoi(aoi_path, spec.url, label=f"Soil source {spec.key}")
 
     keep_paths: set[Path] = set()
     layers: list[dict] = []
@@ -456,7 +477,8 @@ def harmonize_soil_layers(
             ) from exc
         raise
 
-    output_dir.mkdir(parents=True, exist_ok=True)
+    load_and_validate_aoi(aoi_path)
+    ensure_output_dir_writable(output_dir)
     export_asc = output_format in {"asc", "both"}
     export_tif = output_format in {"tif", "both"}
 
@@ -464,8 +486,17 @@ def harmonize_soil_layers(
     if template_path is not None:
         if not template_path.exists():
             raise FileNotFoundError(f"Template raster not found: {template_path}")
+        validate_raster_path(template_path, label="Template raster")
+        validate_aoi_overlaps_raster(aoi_path, template_path, label="Template raster")
         target_crs, template_meta = _load_template_meta(template_path)
     else:
+        dem_source = str((dem_cfg or {}).get("source", "bmi-topography")).lower()
+        if dem_source == "local":
+            dem_path = (dem_cfg or {}).get("path")
+            if not dem_path:
+                raise ValueError("dem.source='local' requires dem.path in config.")
+            validate_raster_path(dem_path, label="DEM")
+            validate_aoi_overlaps_raster(aoi_path, dem_path, label="DEM")
         target_crs = _infer_utm_crs(aoi_path)
         template_path, template_meta = _build_template_from_dem(
             aoi_path=aoi_path,
@@ -485,8 +516,12 @@ def harmonize_soil_layers(
         if source_dir is not None:
             candidate = source_dir / f"{spec.key}.tif"
             if candidate.exists():
+                validate_raster_path(candidate, label=f"Soil source {spec.key}")
+                validate_aoi_overlaps_raster(aoi_path, candidate, label=f"Soil source {spec.key}")
                 source_tif = candidate
         if source_tif is None:
+            if not spec.url.startswith("http"):
+                _validate_local_source_for_aoi(aoi_path, spec.url, label=f"Soil source {spec.key}")
             source_tif = _resolve_source_to_tif(
                 RasterSourceSpec(key=spec.key, uri=spec.url, resampling=spec.resampling),
                 output_dir,

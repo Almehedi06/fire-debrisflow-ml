@@ -98,11 +98,14 @@ def clip_raster_to_shape(
 ) -> str:
     with rasterio.open(raster_path) as src:
         shapes = _read_shapes(shapefile_path, src.crs, reproject_shapes=reproject_shapes)
-        out_image, out_transform = mask(src, shapes, crop=True)
+        crop = template_meta is None
+        out_image, out_transform = mask(src, shapes, crop=crop)
         out_meta = src.meta.copy()
 
     if template_meta is not None:
-        # Snap clipped raster to DEM grid exactly.
+        # When snapping to a template grid, keep the full template extent and
+        # only mask pixels outside the AOI. Cropping here would break the
+        # template contract.
         out_meta.update(
             {
                 "driver": "GTiff",
@@ -186,11 +189,22 @@ def convert_to_ascii(tif_path: str, out_dir: str, template_meta: dict | None = N
 
     with rasterio.open(tif_path) as src:
         array = src.read(1)
-        meta = template_meta if template_meta is not None else src.meta
+        width = src.width
+        height = src.height
+        transform = src.transform
 
-        transform = meta["transform"]
-        width = meta["width"]
-        height = meta["height"]
+        if template_meta is not None:
+            expected = (
+                template_meta["width"],
+                template_meta["height"],
+                template_meta["transform"],
+            )
+            actual = (width, height, transform)
+            if actual != expected:
+                raise ValueError(
+                    "Raster grid does not match template metadata: "
+                    f"actual={actual} expected={expected}"
+                )
 
         west, south, _, _ = array_bounds(height, width, transform)
         xllcorner = west

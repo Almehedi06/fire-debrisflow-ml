@@ -8,6 +8,21 @@ from bmi_topography import Topography
 
 
 def fetch_dem(aoi_shapefile: str, dem_cfg: dict, output_dir: str) -> Path:
+    source = str(dem_cfg.get("source", "bmi-topography")).lower()
+    if source == "local":
+        local_path = dem_cfg.get("path")
+        if not local_path:
+            raise ValueError("dem.source='local' requires dem.path in config.")
+        dem_path = Path(local_path)
+        if not dem_path.exists():
+            raise FileNotFoundError(f"Local DEM not found: {dem_path}")
+        return dem_path
+
+    if source != "bmi-topography":
+        raise ValueError(
+            f"Unsupported dem.source={source!r}. Expected 'bmi-topography' or 'local'."
+        )
+
     bounds = gpd.read_file(aoi_shapefile).to_crs(epsg=4326).total_bounds
     west, south, east, north = bounds
     buffer_deg = dem_cfg.get("buffer_deg", 0.05)

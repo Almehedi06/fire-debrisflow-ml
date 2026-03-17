@@ -4,6 +4,8 @@ Modular pipeline for postfire raster processing (DEM, soils, burn severity, land
 
 ## Install
 
+`environment.yml` is the canonical project environment for this repo.
+
 Conda (recommended):
 
 ```bash
@@ -53,7 +55,7 @@ pip install -r requirements.txt
 
 Use an environment with required geospatial packages (`geopandas`, `rasterio`, `fiona`, `landlab`, `bmi_topography`, `requests`, `pyyaml`).
 
-Update paths in `config/base.yaml`, then run:
+Start from `config/base.example.yaml`, make a local working copy, update the paths, then run:
 
 ```bash
 python src/run_pipeline.py --config config/base.yaml --export-final-tifs
@@ -62,6 +64,12 @@ python src/run_pipeline.py --config config/base.yaml --export-final-tifs
 This builds aligned final `.asc` and `.tif` layers in `paths.output_dir`.
 
 For dedicated USDA SOLUS soil data workflow (fetch/harmonize/run CLIs), see `usda_solus.md`.
+
+Quick local verification after environment setup:
+
+```bash
+python -m pytest -q tests
+```
 
 ## Burn Severity Source
 

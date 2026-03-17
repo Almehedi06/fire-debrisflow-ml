@@ -1,0 +1,41 @@
+# Landlab experiment config (WSL paths)
+# Purpose: centralize ASC DEM inputs for notebook and batch runs.
+
+paths:
+  asc_dir: /mnt/c/Users/amehedi/Downloads/nsf_rapid/asc
+  output_root: /home/abdullah/debris_landlab/experiments/landlab_runs
+
+files:
+  # Pre-event/reference DEM
+  dem_reference: BoltCreek_USGS_1m_DEM_Reference_A.asc
+  # Aligned LiDAR DEM (post/event snapshot)
+  dem_aligned: BoltCreek_ULS_L1_A_20250904_1m_aligned.asc
+  # LiDAR-derived DEM difference (post - reference)
+  dem_lidar_diff: BoltCreek_ULS_L1_A_20250904_1m_aligned_BoltCreek_USGS_1m_DEM_Reference_diff.asc
+
+landlab:
+  field_name: topographic__elevation
+  nodata_value: -999999.0
+  boundary_conditions:
+    right_is_closed: true
+    top_is_closed: false
+    left_is_closed: true
+    bottom_is_closed: false
+
+simulation_defaults:
+  dt_years: 1.0
+  uplift_rate_m_per_yr: 0.0003
+  k_d_linear_m2_per_yr: 0.01
+  k_d_nonlin_m2_per_yr: 0.01
+  slope_crit: 1.125
+  K_sp: 0.00001
+  m_sp: 0.5
+  n_sp: 1.0
+  threshold_sp: 0.0
+  flow_director: FlowDirectorD8
+
+scenarios:
+  - name: run_5y
+    total_t_years: 5.0
+  - name: run_10y
+    total_t_years: 10.0

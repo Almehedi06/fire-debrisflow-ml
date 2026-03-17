@@ -13,6 +13,12 @@ import yaml
 from dem import fetch_dem
 from downloads import download_file, extract_first_tif
 from landlab_io import add_ascii_field, load_grid, read_nodata_value, write_ascii_field
+from preflight import (
+    ensure_output_dir_writable,
+    load_and_validate_aoi,
+    validate_aoi_overlaps_raster,
+    validate_raster_path,
+)
 from reproject_and_resample import (
     clip_raster_to_shape,
     convert_to_ascii,
@@ -64,9 +70,7 @@ def load_config(config_path: str) -> dict:
 
 
 def ensure_utm_aoi(aoi_path: str) -> tuple[str, str]:
-    gdf = gpd.read_file(aoi_path)
-    if gdf.crs is None:
-        raise ValueError(f"AOI has no CRS: {aoi_path}")
+    gdf = load_and_validate_aoi(aoi_path)
 
     crs_wkt = gdf.crs.to_wkt()
     if "UTM zone" in crs_wkt:
@@ -84,6 +88,35 @@ def ensure_utm_aoi(aoi_path: str) -> tuple[str, str]:
     gdf.to_file(aoi_path, driver="ESRI Shapefile")
     LOG.info("Reprojected AOI to %s and overwrote %s", crs, aoi_path)
     return aoi_path, crs
+
+
+def validate_pipeline_inputs(cfg: dict) -> None:
+    aoi_path = cfg["aoi"]["aoi"]
+    load_and_validate_aoi(aoi_path)
+    ensure_output_dir_writable(cfg["paths"]["output_dir"])
+
+    dem_cfg = cfg.get("dem", {})
+    dem_source = str(dem_cfg.get("source", "bmi-topography")).lower()
+    if dem_source == "local":
+        dem_path = dem_cfg.get("path")
+        if not dem_path:
+            raise ValueError("dem.source='local' requires dem.path in config.")
+        validate_raster_path(dem_path, label="DEM")
+        validate_aoi_overlaps_raster(aoi_path, dem_path, label="DEM")
+
+    for spec in build_sources_from_config(cfg):
+        if isinstance(spec.uri, list):
+            continue
+        uri = spec.uri
+        if uri.startswith("http"):
+            continue
+        local_path = uri
+        if uri.lower().endswith(".zip"):
+            if not os.path.exists(local_path):
+                raise FileNotFoundError(f"Local source zip not found: {local_path}")
+            continue
+        validate_raster_path(local_path, label=f"Source {spec.key}")
+        validate_aoi_overlaps_raster(aoi_path, local_path, label=f"Source {spec.key}")
 
 
 def build_sources_from_config(cfg: dict) -> list[SourceSpec]:
@@ -273,6 +306,7 @@ def process_source(
 
 
 def run_raster_pipeline(cfg: dict, cleanup_intermediates: bool = True) -> dict:
+    validate_pipeline_inputs(cfg)
     aoi_path, target_crs = ensure_utm_aoi(cfg["aoi"]["aoi"])
     output_dir = cfg["paths"]["output_dir"]
     os.makedirs(output_dir, exist_ok=True)

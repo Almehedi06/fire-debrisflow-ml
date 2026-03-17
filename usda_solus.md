@@ -5,6 +5,8 @@ Use this when you need pixel-aligned soil layers for downstream Landlab/ML/stati
 
 ## Install
 
+`environment.yml` is the canonical project environment for this repo.
+
 Conda (recommended):
 
 ```bash

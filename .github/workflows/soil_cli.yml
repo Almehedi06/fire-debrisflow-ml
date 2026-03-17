@@ -23,7 +23,7 @@ jobs:
       - name: Unit Tests
         shell: bash -l {0}
         run: |
-          pytest -q tests/test_soil_data_core.py
+          pytest -q tests
 
       - name: Soil CLI Smoke Test
         shell: bash -l {0}
