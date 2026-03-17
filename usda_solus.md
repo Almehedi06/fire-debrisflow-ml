@@ -2,6 +2,7 @@
 
 This document is the dedicated guide for SOLUS soil retrieval and homogenization.
 Use this when you need pixel-aligned soil layers for downstream Landlab/ML/statistical tasks.
+This is not the repo's full end-to-end pipeline. Use `README.md` and `src/run_pipeline.py` when you want the broader DEM + burn + landcover + soil feature-generation workflow and downstream ML/deep-learning steps.
 
 ## Install
 
@@ -62,6 +63,11 @@ There are two explicit stages plus one convenience wrapper:
 CLIs are available as scripts and package entry points:
 - Script wrappers: `scripts/soil_fetch.py`, `scripts/soil_harmonize.py`, `scripts/soil_run.py`
 - Backward-compatible alias: `scripts/download_soil_data.py` -> `soil-run`
+
+Use this soil workflow when:
+- you only need soil rasters,
+- you want to deliver soil layers to someone else,
+- you want to align soils to an external template DEM/grid without running the full repo pipeline.
 
 ## Soil Variables (Current Set)
 

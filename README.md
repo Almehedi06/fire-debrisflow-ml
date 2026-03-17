@@ -2,6 +2,19 @@
 
 Modular pipeline for postfire raster processing (DEM, soils, burn severity, landcover) and ML training for `dem_diff` prediction.
 
+## What This Repo Can Do
+
+- Build an aligned raster stack for an AOI from DEM, soil, burn severity, and landcover inputs.
+- Use a remote DEM (`bmi-topography`) or a local DEM raster as the elevation source.
+- Fetch USDA SOLUS soil rasters, clip them to AOI, and harmonize them to a common grid.
+- Generate Landlab-ready ASCII layers and exported GeoTIFF layers from the same processed stack.
+- Create a `dem_diff.tif` target raster from aligned pre/post DEMs.
+- Train raster ML regressors for `dem_diff` with Random Forest and XGBoost.
+- Train deep raster models for `dem_diff` with U-Net and a simple CNN.
+- Run full-raster prediction from trained ML/deep models.
+- Run model-interpretation utilities for permutation feature importance and partial dependence.
+- Run local smoke tests and CI checks for the soil workflow and raster processing path.
+
 ## Install
 
 `environment.yml` is the canonical project environment for this repo.
@@ -71,6 +84,29 @@ Quick local verification after environment setup:
 python -m pytest -q tests
 ```
 
+## Which Workflow To Use
+
+Use the main pipeline when you want the repo's end-to-end feature engineering and modeling workflow:
+
+- build aligned DEM, soil, burn severity, and landcover layers,
+- export Landlab-ready `.asc` and `.tif` outputs,
+- create modeling-ready rasters for `dem_diff`,
+- train or run ML/deep models on the prepared stack.
+
+Use the dedicated soil CLI when you only need soil collection/harmonization as a standalone task:
+
+- fetch USDA SOLUS soil rasters,
+- clip them to an AOI,
+- harmonize them to a chosen template grid,
+- hand the outputs to another workflow or another user.
+
+Relationship between them:
+
+- they are related, because both deal with raster preprocessing,
+- they are not the same thing,
+- the soil CLI is a standalone sub-workflow,
+- the main pipeline is the broader end-to-end workflow for feature generation and modeling.
+
 ## Burn Severity Source
 
 `config/base.yaml` supports:
@@ -79,6 +115,13 @@ python -m pytest -q tests
 - `source: remote`
 - `source: remote_then_local` (try fire-name/id remote first, then local)
 - `source: auto` (same behavior as `remote_then_local`)
+
+## DEM Source
+
+`config/base.yaml` supports:
+
+- `source: bmi-topography`
+- `source: local` with `dem.path` pointing to a local raster
 
 ## DEM Difference Target
 
@@ -149,6 +192,34 @@ python scripts/predict_cnn.py \
   --feature-order "$(ls -1dt models/cnn/* | head -n 1)/feature_order.json" \
   --data-dir /path/to/output \
   --out-path /path/to/output/dem_diff_pred_cnn.tif
+```
+
+## Interpretation
+
+Permutation feature importance:
+
+```bash
+python scripts/feature_importance.py --config config/interpret.yaml
+```
+
+Partial dependence:
+
+```bash
+python scripts/partial_dependence.py --config config/interpret.yaml
+```
+
+## Testing
+
+Run the full local test suite:
+
+```bash
+python -m pytest -q tests
+```
+
+Run the soil workflow smoke test directly:
+
+```bash
+python scripts/smoke_test_soil_cli.py
 ```
 
 ## Notes
