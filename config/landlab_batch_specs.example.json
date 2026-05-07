@@ -1,0 +1,34 @@
+[
+  {
+    "run_id": "baseline",
+    "k_d": 0.01,
+    "K_sp": 0.00001,
+    "uplift_rate": 0.0003
+  },
+  {
+    "run_id": "higher_diffusivity",
+    "k_d": 0.02,
+    "K_sp": 0.00001,
+    "uplift_rate": 0.0003
+  },
+  {
+    "run_id": "higher_erodibility",
+    "k_d": 0.01,
+    "K_sp": 0.00002,
+    "uplift_rate": 0.0003
+  },
+  {
+    "run_id": "higher_uplift",
+    "k_d": 0.01,
+    "K_sp": 0.00001,
+    "uplift_rate": 0.0005
+  }
+]
+
+
+# linear
+# non-linear 
+# Sc
+
+
+

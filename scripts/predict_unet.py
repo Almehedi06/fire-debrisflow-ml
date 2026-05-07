@@ -24,6 +24,7 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--patch-size", type=int, default=None, help="Override inference patch size.")
     parser.add_argument("--stride", type=int, default=None, help="Override inference stride.")
     parser.add_argument("--nodata", type=float, default=-9999.0, help="Output nodata value.")
+    parser.add_argument("--device", default=None, help="Inference device: auto, cpu, cuda, or cuda:<index>.")
     return parser.parse_args()
 
 
@@ -33,10 +34,12 @@ def main() -> None:
     from deep.data import load_feature_stack
     from deep.predict import predict_full_raster, save_prediction_tif
     from deep.unet import UNetRegressor
+    from deep.device import resolve_device
 
     import torch
 
     checkpoint = torch.load(args.model_path, map_location="cpu")
+    device_info = resolve_device(args.device or checkpoint.get("device_requested", "auto"))
     in_channels = int(checkpoint["in_channels"])
     base_channels = int(checkpoint.get("base_channels", 32))
     patch_size = int(args.patch_size or checkpoint.get("patch_size", 128))
@@ -46,6 +49,7 @@ def main() -> None:
 
     model = UNetRegressor(in_channels=in_channels, base_channels=base_channels)
     model.load_state_dict(checkpoint["model_state_dict"])
+    model = model.to(device_info["resolved"])
     model.eval()
 
     with open(args.feature_order, "r") as f:
@@ -79,7 +83,7 @@ def main() -> None:
         valid_mask=bundle["valid_mask"],
         patch_size=patch_size,
         stride=stride,
-        device="cpu",
+        device=device_info["resolved"],
         nodata_value=float(args.nodata),
     )
     out_path = save_prediction_tif(
@@ -88,6 +92,7 @@ def main() -> None:
         out_path=args.out_path,
         nodata_value=float(args.nodata),
     )
+    print("Device:", device_info["resolved"], f"(requested: {device_info['requested']})")
     print("Saved predictions:", out_path)
 
 

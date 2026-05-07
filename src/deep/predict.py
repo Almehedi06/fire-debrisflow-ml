@@ -16,6 +16,26 @@ def _tile_starts(size: int, patch_size: int, stride: int) -> list[int]:
     return starts
 
 
+def _feather_axis_weights(length: int, min_weight: float = 0.05) -> np.ndarray:
+    if length <= 2:
+        return np.ones(length, dtype="float32")
+
+    center_distance = (length - 1) // 2
+    if center_distance <= 0:
+        return np.ones(length, dtype="float32")
+
+    coords = np.arange(length, dtype="float32")
+    edge_distance = np.minimum(coords, (length - 1) - coords)
+    weights = edge_distance / float(center_distance)
+    return np.clip(weights, min_weight, 1.0).astype("float32")
+
+
+def _feather_patch_weights(height: int, width: int, min_weight: float = 0.05) -> np.ndarray:
+    wy = _feather_axis_weights(height, min_weight=min_weight)
+    wx = _feather_axis_weights(width, min_weight=min_weight)
+    return (wy[:, None] * wx[None, :]).astype("float32")
+
+
 def predict_full_raster(
     model,
     x: np.ndarray,  # [C, H, W]
@@ -30,6 +50,7 @@ def predict_full_raster(
     _, h, w = x.shape
     pred_sum = np.zeros((h, w), dtype="float32")
     pred_count = np.zeros((h, w), dtype="float32")
+    base_weights = _feather_patch_weights(patch_size, patch_size)
 
     row_starts = _tile_starts(h, patch_size, stride)
     col_starts = _tile_starts(w, patch_size, stride)
@@ -49,9 +70,13 @@ def predict_full_raster(
                 xb = torch.from_numpy(padded[None, :, :, :]).to(device)
                 out = model(xb).detach().cpu().numpy()[0, 0]
                 out = out[: patch.shape[1], : patch.shape[2]]
+                if patch.shape[1] == patch_size and patch.shape[2] == patch_size:
+                    weights = base_weights
+                else:
+                    weights = _feather_patch_weights(patch.shape[1], patch.shape[2])
 
-                pred_sum[r0:r1, c0:c1] += out
-                pred_count[r0:r1, c0:c1] += 1.0
+                pred_sum[r0:r1, c0:c1] += out * weights
+                pred_count[r0:r1, c0:c1] += weights
 
     pred_count[pred_count == 0.0] = 1.0
     pred = pred_sum / pred_count
@@ -79,4 +104,3 @@ def save_prediction_tif(
     with rasterio.open(out, "w", **out_profile) as dst:
         dst.write(pred, 1)
     return out
-

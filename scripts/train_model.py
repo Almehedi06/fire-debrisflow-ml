@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import argparse
+import itertools
 from pathlib import Path
 import sys
 
+import numpy as np
 import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -32,14 +34,63 @@ def _parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
+def _base_model_params(model_cfg: dict) -> dict:
+    excluded = {"type", "search_grid"}
+    return {k: v for k, v in model_cfg.items() if k not in excluded}
+
+
+def _expand_model_param_grid(model_cfg: dict) -> list[dict]:
+    base = _base_model_params(model_cfg)
+    grid = model_cfg.get("search_grid") or {}
+    if not grid:
+        return [base]
+
+    keys = list(grid.keys())
+    value_lists: list[list] = []
+    for key in keys:
+        values = grid[key]
+        if not isinstance(values, list) or not values:
+            raise ValueError(f"search_grid[{key!r}] must be a non-empty list.")
+        value_lists.append(values)
+
+    candidates: list[dict] = []
+    for combo in itertools.product(*value_lists):
+        candidate = base.copy()
+        candidate.update(dict(zip(keys, combo)))
+        candidates.append(candidate)
+    return candidates
+
+
+def _fit_model(model_type: str, x_train, y_train, params: dict):
+    from ml.train import train_random_forest_regressor, train_xgboost_regressor
+
+    if model_type == "rf":
+        return train_random_forest_regressor(x_train, y_train, **params)
+    if model_type == "xgb":
+        return train_xgboost_regressor(x_train, y_train, **params)
+    raise ValueError(f"Unsupported model type: {model_type}")
+
+
+def _select_best_candidate(results: list[dict], metric: str) -> dict:
+    if metric not in {"rmse", "mae", "r2"}:
+        raise ValueError(f"Unsupported selection_metric: {metric}")
+    key = f"mean_{metric}"
+    reverse = metric == "r2"
+    return sorted(results, key=lambda row: row[key], reverse=reverse)[0]
+
+
 def main() -> None:
     args = _parse_args()
 
     from ml.dataset import build_xy_from_rasters, discover_feature_paths
     from ml.evaluate import regression_metrics
     from ml.io import copy_config, create_run_dir, save_json, save_model
-    from ml.split import random_train_test_split
-    from ml.train import train_random_forest_regressor, train_xgboost_regressor
+    from ml.split import (
+        build_spatial_block_groups,
+        random_train_test_split,
+        spatial_block_kfold_indices,
+        spatial_block_train_test_split,
+    )
 
     cfg = _load_yaml(args.config)
 
@@ -67,53 +118,104 @@ def main() -> None:
     )
 
     bundle = build_xy_from_rasters(feature_paths, target_path)
-    split = random_train_test_split(
-        bundle["X"],
-        bundle["y"],
-        test_size=float(split_cfg.get("test_size", 0.2)),
-        random_state=int(split_cfg.get("random_state", 42)),
-    )
+    split_method = str(split_cfg.get("method", "random")).lower()
+    random_state = int(split_cfg.get("random_state", 42))
+    candidate_params = _expand_model_param_grid(model_cfg)
+    if split_method == "random" and len(candidate_params) > 1:
+        raise ValueError(
+            "model.search_grid is only supported with split.method=spatial_block_cv."
+        )
 
-    if model_type == "rf":
-        model = train_random_forest_regressor(
-            split["X_train"],
-            split["y_train"],
-            n_estimators=int(model_cfg.get("n_estimators", 300)),
-            max_depth=model_cfg.get("max_depth"),
-            min_samples_leaf=int(model_cfg.get("min_samples_leaf", 1)),
-            random_state=int(model_cfg.get("random_state", 42)),
-            n_jobs=int(model_cfg.get("n_jobs", -1)),
+    cv_results: list[dict] | None = None
+    best_params = candidate_params[0]
+
+    if split_method == "random":
+        split = random_train_test_split(
+            bundle["X"],
+            bundle["y"],
+            test_size=float(split_cfg.get("test_size", 0.2)),
+            random_state=random_state,
         )
-    elif model_type == "xgb":
-        model = train_xgboost_regressor(
-            split["X_train"],
-            split["y_train"],
-            n_estimators=int(model_cfg.get("n_estimators", 1200)),
-            max_depth=int(model_cfg.get("max_depth", 6)),
-            learning_rate=float(model_cfg.get("learning_rate", 0.03)),
-            subsample=float(model_cfg.get("subsample", 0.9)),
-            colsample_bytree=float(model_cfg.get("colsample_bytree", 0.9)),
-            min_child_weight=float(model_cfg.get("min_child_weight", 5.0)),
-            gamma=float(model_cfg.get("gamma", 0.1)),
-            reg_alpha=float(model_cfg.get("reg_alpha", 0.0)),
-            reg_lambda=float(model_cfg.get("reg_lambda", 2.0)),
-            tree_method=str(model_cfg.get("tree_method", "hist")),
-            max_bin=int(model_cfg.get("max_bin", 256)),
-            verbosity=int(model_cfg.get("verbosity", 0)),
-            random_state=int(model_cfg.get("random_state", 42)),
-            n_jobs=int(model_cfg.get("n_jobs", -1)),
+        model = _fit_model(model_type, split["X_train"], split["y_train"], best_params)
+        y_pred = model.predict(split["X_test"])
+        metrics = regression_metrics(split["y_test"], y_pred)
+        split_summary = {
+            "method": "random",
+            "test_size": float(split_cfg.get("test_size", 0.2)),
+            "random_state": random_state,
+            "n_train_samples": int(split["X_train"].shape[0]),
+            "n_test_samples": int(split["X_test"].shape[0]),
+        }
+    elif split_method == "spatial_block_cv":
+        block_size = int(split_cfg.get("block_size", 64))
+        n_folds = int(split_cfg.get("n_folds", 5))
+        selection_metric = str(split_cfg.get("selection_metric", "rmse")).lower()
+
+        groups = build_spatial_block_groups(bundle["valid_mask"], block_size=block_size)
+        split = spatial_block_train_test_split(
+            bundle["X"],
+            bundle["y"],
+            groups=groups,
+            test_size=float(split_cfg.get("test_size", 0.2)),
+            random_state=random_state,
         )
+        folds = spatial_block_kfold_indices(
+            split["groups_train"],
+            n_splits=n_folds,
+            random_state=random_state,
+        )
+
+        cv_results = []
+        for candidate in candidate_params:
+            fold_metrics: list[dict] = []
+            for fold_id, fold in enumerate(folds, start=1):
+                fold_model = _fit_model(
+                    model_type,
+                    split["X_train"][fold["train_idx"]],
+                    split["y_train"][fold["train_idx"]],
+                    candidate,
+                )
+                y_val_pred = fold_model.predict(split["X_train"][fold["val_idx"]])
+                fold_metric = regression_metrics(split["y_train"][fold["val_idx"]], y_val_pred)
+                fold_metrics.append({"fold": fold_id, **fold_metric})
+
+            cv_results.append(
+                {
+                    "params": candidate,
+                    "fold_metrics": fold_metrics,
+                    "mean_r2": float(np.mean([row["r2"] for row in fold_metrics])),
+                    "mean_rmse": float(np.mean([row["rmse"] for row in fold_metrics])),
+                    "mean_mae": float(np.mean([row["mae"] for row in fold_metrics])),
+                }
+            )
+
+        best_cv = _select_best_candidate(cv_results, selection_metric)
+        best_params = best_cv["params"]
+        model = _fit_model(model_type, split["X_train"], split["y_train"], best_params)
+        y_pred = model.predict(split["X_test"])
+        metrics = regression_metrics(split["y_test"], y_pred)
+        split_summary = {
+            "method": "spatial_block_cv",
+            "block_size": block_size,
+            "n_folds": n_folds,
+            "selection_metric": selection_metric,
+            "random_state": random_state,
+            "n_total_groups": int(np.unique(groups).size),
+            "n_train_groups": int(np.unique(split["groups_train"]).size),
+            "n_test_groups": int(np.unique(split["groups_test"]).size),
+            "n_train_samples": int(split["X_train"].shape[0]),
+            "n_test_samples": int(split["X_test"].shape[0]),
+            "test_group_fraction": float(split_cfg.get("test_size", 0.2)),
+        }
     else:
-        raise ValueError(f"Unsupported model type: {model_type}")
-
-    y_pred = model.predict(split["X_test"])
-    metrics = regression_metrics(split["y_test"], y_pred)
+        raise ValueError(f"Unsupported split.method: {split_method}")
 
     model_root = Path(args.model_root or output_cfg.get("model_dir", f"models/{model_type}"))
     run_dir = create_run_dir(model_root, prefix=output_cfg.get("run_prefix", model_type))
 
     model_path = save_model(model, run_dir / "model.joblib")
     save_json(metrics, run_dir / "metrics.json")
+    save_json(split_summary, run_dir / "split_summary.json")
     save_json(
         {
             "target_file": target_name,
@@ -122,19 +224,29 @@ def main() -> None:
             "feature_names": bundle["feature_names"],
             "n_features": len(bundle["feature_files"]),
             "n_valid_pixels": int(bundle["X"].shape[0]),
-            "split": {
-                "test_size": float(split_cfg.get("test_size", 0.2)),
-                "random_state": int(split_cfg.get("random_state", 42)),
-            },
+            "split_method": split_method,
         },
         run_dir / "feature_order.json",
     )
+    if cv_results is not None:
+        save_json(
+            {
+                "selection_metric": split_summary["selection_metric"],
+                "best_params": best_params,
+                "candidates": cv_results,
+            },
+            run_dir / "cv_results.json",
+        )
     save_json(cfg, run_dir / "resolved_train_config.json")
     copy_config(args.config, run_dir / "train_config.yaml")
 
     print("Saved model:", model_path)
     print("Saved metrics:", run_dir / "metrics.json")
+    print("Saved split:", run_dir / "split_summary.json")
     print("Saved features:", run_dir / "feature_order.json")
+    if cv_results is not None:
+        print("Saved CV results:", run_dir / "cv_results.json")
+        print("Best params:", best_params)
     print("Model type:", model_type)
     print("Test R2:", metrics["r2"])
     print("Test RMSE:", metrics["rmse"])

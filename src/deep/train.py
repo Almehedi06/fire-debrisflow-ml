@@ -7,6 +7,7 @@ from typing import Callable
 import numpy as np
 
 from deep.cnn import SimpleCNNRegressor
+from deep.device import resolve_device
 from deep.data import (
     RasterPatchDataset,
     build_block_windows,
@@ -22,6 +23,10 @@ class TrainArtifacts:
     model: object
     history: list[dict]
     test_metrics: dict
+    best_val_metrics: dict
+    best_epoch: int
+    device_requested: str
+    device_resolved: str
     split_summary: dict
     norm_mean: np.ndarray
     norm_std: np.ndarray
@@ -89,6 +94,14 @@ def _masked_huber_loss(pred, target, mask, delta: float):
     if denom.item() <= 0:
         return torch.tensor(0.0, device=pred.device, dtype=pred.dtype)
     return masked.sum() / denom
+
+
+def _metric_is_better(current: float, best: float, metric: str) -> bool:
+    if metric == "r2":
+        return current > best
+    if metric in {"rmse", "mae"}:
+        return current < best
+    raise ValueError(f"Unsupported checkpoint metric: {metric}")
 
 
 def _evaluate_loader(model, loader, device: str) -> tuple[float, dict]:
@@ -239,7 +252,9 @@ def _train_patch_regression(
     val_loader = DataLoader(val_ds, batch_size=batch_size, shuffle=False)
     test_loader = DataLoader(test_ds, batch_size=batch_size, shuffle=False)
 
-    device = "cpu"
+    runtime_cfg = config.get("runtime", {})
+    device_info = resolve_device(runtime_cfg.get("device", "auto"))
+    device = device_info["resolved"]
     model_cfg = config.get("model", {})
     model = model_builder(int(x.shape[0]), model_cfg).to(device)
     optimizer = torch.optim.Adam(
@@ -249,6 +264,12 @@ def _train_patch_regression(
     )
     loss_name = str(train_cfg.get("loss", "mse")).lower()
     huber_delta = float(train_cfg.get("huber_delta", 1.0))
+    checkpoint_metric = str(train_cfg.get("checkpoint_metric", "rmse")).lower()
+    if checkpoint_metric not in {"rmse", "mae", "r2"}:
+        raise ValueError(
+            f"Unsupported training.checkpoint_metric: {checkpoint_metric}. "
+            "Use one of: rmse, mae, r2."
+        )
 
     def _train_loss(out, yb, mb):
         if loss_name == "huber":
@@ -256,7 +277,9 @@ def _train_patch_regression(
         return _masked_mse_loss(out, yb, mb)
 
     best_state = None
-    best_val_rmse = float("inf")
+    best_epoch = 0
+    best_val_metrics = {"r2": float("nan"), "rmse": float("inf"), "mae": float("inf")}
+    best_metric_value = float("-inf") if checkpoint_metric == "r2" else float("inf")
     history: list[dict] = []
 
     epochs = int(train_cfg.get("epochs", 20))
@@ -288,9 +311,16 @@ def _train_patch_regression(
         }
         history.append(epoch_row)
 
-        if val_metrics["rmse"] < best_val_rmse:
-            best_val_rmse = val_metrics["rmse"]
+        metric_value = float(val_metrics[checkpoint_metric])
+        if _metric_is_better(metric_value, best_metric_value, checkpoint_metric):
+            best_metric_value = metric_value
             best_state = copy.deepcopy(model.state_dict())
+            best_epoch = epoch
+            best_val_metrics = {
+                "r2": float(val_metrics["r2"]),
+                "rmse": float(val_metrics["rmse"]),
+                "mae": float(val_metrics["mae"]),
+            }
 
     if best_state is not None:
         model.load_state_dict(best_state)
@@ -306,6 +336,8 @@ def _train_patch_regression(
         "stride": stride,
         "block_size": block_size,
         "min_valid_fraction": min_valid_fraction,
+        "device_requested": device_info["requested"],
+        "device_resolved": device_info["resolved"],
         "n_train_patches": len(train_ds),
         "n_val_patches": len(val_ds),
         "n_test_patches": len(test_ds),
@@ -318,6 +350,10 @@ def _train_patch_regression(
         model=model,
         history=history,
         test_metrics=test_metrics,
+        best_val_metrics=best_val_metrics,
+        best_epoch=best_epoch,
+        device_requested=device_info["requested"],
+        device_resolved=device_info["resolved"],
         split_summary=split_summary,
         norm_mean=norm_mean,
         norm_std=norm_std,

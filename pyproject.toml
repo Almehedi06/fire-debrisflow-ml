@@ -47,7 +47,7 @@ soil-run = "soil_data.cli_run:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
-py-modules = ["dem", "downloads", "reproject_and_resample"]
+py-modules = ["dem", "downloads", "preflight", "reproject_and_resample"]
 
 [tool.setuptools.packages.find]
 where = ["src"]

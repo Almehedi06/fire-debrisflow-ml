@@ -1,0 +1,119 @@
+# ----------------------------
+# Spatial inputs / AOI
+# ----------------------------
+aoi:
+  aoi: /abs/path/to/aoi.shp
+
+# ----------------------------
+# Data directories
+# ----------------------------
+paths:
+  input_dir: /abs/path/to/project_inputs
+  output_dir: /abs/path/to/project_outputs
+
+# ----------------------------
+# Model inputs (feature switches)
+# ----------------------------
+inputs:
+  soil:
+    k_factor: true
+  burn:
+    index: dNBR
+  topography:
+    elevation: true
+    slope: true
+    aspect: true
+  climate:
+    rainfall: true
+
+# ----------------------------
+# Target / label settings
+# ----------------------------
+target:
+  variable: debris_flow
+  type: binary
+  positive_value: 1
+
+# ----------------------------
+# Raster processing
+# ----------------------------
+raster:
+  target_res: 10
+  resampling_method: bilinear
+
+# ----------------------------
+# Fire metadata
+# ----------------------------
+fire:
+  name: Example Fire
+  id: ST0000000000000000000
+  state: WA
+  year: 2022
+
+# ----------------------------
+# DEM source
+# ----------------------------
+dem:
+  # Use one of:
+  # source: bmi-topography
+  # source: local
+  source: bmi-topography
+  dem_type: USGS10m
+  output_format: GTiff
+  buffer_deg: 0.05
+  cache_dir: /abs/path/to/cache
+  api_key: ""
+
+  # Required only when source=local
+  # path: /abs/path/to/local_dem.tif
+
+# ----------------------------
+# Burn severity (selectable source)
+# ----------------------------
+burn_severity:
+  source: remote_then_local
+
+  local:
+    path: /abs/path/to/local_burn_dir
+    filename: burn_severity.tif
+    resampling: nearest
+
+  remote:
+    base_url: https://edcintl.cr.usgs.gov/downloads/sciweb1/shared/MTBS_Fire/data/baer/
+    candidates:
+      - "{base_url}{fire_name_fmt}_sbs.zip"
+      - "{base_url}{fire_name_fmt}_{fire_id_fmt}_sbs.zip"
+    resampling: nearest
+
+# ----------------------------
+# Other feature rasters
+# ----------------------------
+feature_sources:
+  rasters:
+    cec7_0_cm:
+      url: https://storage.googleapis.com/solus100pub/cec7_0_cm_p.tif
+      resampling: bilinear
+    anylithicdpt_cm:
+      url: https://storage.googleapis.com/solus100pub/anylithicdpt_cm_p.tif
+      resampling: bilinear
+    claytotal_0_cm:
+      url: https://storage.googleapis.com/solus100pub/claytotal_0_cm_p.tif
+      resampling: bilinear
+    ph1to1h2o_0_cm:
+      url: https://storage.googleapis.com/solus100pub/ph1to1h2o_0_cm_p.tif
+      resampling: bilinear
+    sandtotal_0_cm:
+      url: https://storage.googleapis.com/solus100pub/sandtotal_0_cm_p.tif
+      resampling: bilinear
+    silttotal_0_cm:
+      url: https://storage.googleapis.com/solus100pub/silttotal_0_cm_p.tif
+      resampling: bilinear
+    dbovendry_0_cm:
+      url: https://storage.googleapis.com/solus100pub/dbovendry_0_cm_p.tif
+      resampling: bilinear
+
+  landcover:
+    nlcd_2021:
+      url: https://www.mrlc.gov/downloads/sciweb1/shared/mrlc/data-bundles/Annual_NLCD_LndCov_2021_CU_C1V1.zip
+      resampling: nearest
+      unzip: true

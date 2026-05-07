@@ -2,8 +2,11 @@
 
 This document is the dedicated guide for SOLUS soil retrieval and homogenization.
 Use this when you need pixel-aligned soil layers for downstream Landlab/ML/statistical tasks.
+This is not the repo's full end-to-end pipeline. Use `README.md` and `src/run_pipeline.py` when you want the broader DEM + burn + landcover + soil feature-generation workflow and downstream ML/deep-learning steps.
 
 ## Install
+
+`environment.yml` is the canonical project environment for this repo.
 
 Conda (recommended):
 
@@ -49,6 +52,26 @@ Pip (if your system already has geospatial prerequisites):
 pip install -r requirements.txt
 ```
 
+## Soil-Only Getting Started
+
+Recommended path for a new machine:
+
+```bash
+git clone <your-repo-url>
+cd fire-debrisflow-ml
+conda env create -f environment.yml
+conda activate fire-debrisflow-ml
+python -m pytest -q tests
+cp config/base.example.yaml config/base.yaml
+```
+
+Then:
+
+1. Edit `config/base.yaml` so `aoi.aoi` points to your AOI shapefile.
+2. Set `paths.output_dir` to your desired output location.
+3. If you already have a DEM/grid to match, keep its path ready for `--template`.
+4. Run one of the soil commands below depending on whether you want fetch-only, harmonize-only, or both.
+
 ## Workflow Design
 
 There are two explicit stages plus one convenience wrapper:
@@ -60,6 +83,11 @@ There are two explicit stages plus one convenience wrapper:
 CLIs are available as scripts and package entry points:
 - Script wrappers: `scripts/soil_fetch.py`, `scripts/soil_harmonize.py`, `scripts/soil_run.py`
 - Backward-compatible alias: `scripts/download_soil_data.py` -> `soil-run`
+
+Use this soil workflow when:
+- you only need soil rasters,
+- you want to deliver soil layers to someone else,
+- you want to align soils to an external template DEM/grid without running the full repo pipeline.
 
 ## Soil Variables (Current Set)
 
