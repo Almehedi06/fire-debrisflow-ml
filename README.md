@@ -162,6 +162,13 @@ python src/dem_difference.py \
 
 ## Train Models
 
+Model configs in `config/ml_*.yaml` should declare the exact training rasters under `data.include_names`.
+That explicit list is the authoritative feature set for the run. Training saves the same ordered list in `feature_order.json`, and prediction reuses it.
+
+For `RF` and `XGB`, `split.method: spatial_block_cv` enables a held-out spatial test set plus spatial block cross-validation on the remaining blocks.
+Key fields are `split.block_size`, `split.n_folds`, `split.test_size`, and `split.selection_metric`.
+If you want to tune tree-model hyperparameters, add `model.search_grid` in the config. Without that block, the script evaluates the single configured parameter set.
+
 Random Forest:
 
 ```bash
@@ -179,6 +186,15 @@ U-Net (CPU starter setup):
 ```bash
 python scripts/train_unet.py --config config/ml_unet.yaml
 ```
+
+U-Net tuning:
+
+```bash
+python scripts/tune_unet.py --config config/ml_unet.yaml
+```
+
+`train_unet.py` trains one configured run. `tune_unet.py` expands `tuning.search_space`, ranks candidates by validation metric, writes per-candidate histories/metrics, and saves the best model under `models/unet_tuning/<run_id>/best_model/`.
+Deep configs support `runtime.device: auto|cpu|cuda`, and the train/predict scripts also accept `--device` for an explicit override.
 
 Simple CNN (CPU starter setup):
 

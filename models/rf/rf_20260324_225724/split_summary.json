@@ -1,0 +1,13 @@
+{
+  "block_size": 64,
+  "method": "spatial_block_cv",
+  "n_folds": 5,
+  "n_test_groups": 30,
+  "n_test_samples": 98777,
+  "n_total_groups": 150,
+  "n_train_groups": 120,
+  "n_train_samples": 429854,
+  "random_state": 42,
+  "selection_metric": "rmse",
+  "test_group_fraction": 0.2
+}

@@ -1,0 +1,69 @@
+{
+  "data": {
+    "dir": "/mnt/c/Users/amehedi/Downloads/ml_debris/output/thomas",
+    "include_names": [
+      "saturated__water_content.tif",
+      "silt__total.tif",
+      "soil__density.tif",
+      "soil__internal_friction_angle.tif",
+      "soil__maximum_total_cohesion.tif",
+      "soil__minimum_total_cohesion.tif",
+      "soil__mode_total_cohesion.tif",
+      "soil__saturated_hydraulic_conductivity.tif",
+      "soil__texture.tif",
+      "soil__thickness.tif",
+      "soil__transmissivity.tif",
+      "topographic__elevation.tif",
+      "wilting__point.tif"
+    ],
+    "target_name": "dem_diff.tif"
+  },
+  "model": {
+    "base_channels": 32,
+    "type": "unet"
+  },
+  "output": {
+    "model_dir": "models/unet",
+    "run_prefix": "unet",
+    "tuning_dir": "models/unet_tuning"
+  },
+  "runtime": {
+    "device": "auto"
+  },
+  "split": {
+    "block_size": 128,
+    "random_state": 42,
+    "test_size": 0.2,
+    "train_size": 0.6,
+    "val_size": 0.2
+  },
+  "training": {
+    "batch_size": 16,
+    "checkpoint_metric": "rmse",
+    "epochs": 300,
+    "huber_delta": 0.5,
+    "learning_rate": 0.001,
+    "loss": "huber",
+    "min_valid_fraction": 0.025,
+    "patch_size": 32,
+    "stride": 16,
+    "weight_decay": 0.0001
+  },
+  "tuning": {
+    "search_space": {
+      "model.base_channels": [
+        16,
+        32
+      ],
+      "training.learning_rate": [
+        0.0003,
+        0.001
+      ],
+      "training.patch_size": [
+        32,
+        64
+      ]
+    },
+    "selection_metric": "rmse"
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "feature_files": [
+    "saturated__water_content.tif",
+    "silt__total.tif",
+    "soil__density.tif",
+    "soil__internal_friction_angle.tif",
+    "soil__maximum_total_cohesion.tif",
+    "soil__minimum_total_cohesion.tif",
+    "soil__mode_total_cohesion.tif",
+    "soil__saturated_hydraulic_conductivity.tif",
+    "soil__texture.tif",
+    "soil__thickness.tif",
+    "soil__transmissivity.tif",
+    "topographic__elevation.tif",
+    "wilting__point.tif"
+  ],
+  "feature_names": [
+    "saturated__water_content",
+    "silt__total",
+    "soil__density",
+    "soil__internal_friction_angle",
+    "soil__maximum_total_cohesion",
+    "soil__minimum_total_cohesion",
+    "soil__mode_total_cohesion",
+    "soil__saturated_hydraulic_conductivity",
+    "soil__texture",
+    "soil__thickness",
+    "soil__transmissivity",
+    "topographic__elevation",
+    "wilting__point"
+  ],
+  "model_type": "unet",
+  "n_features": 13,
+  "target_file": "dem_diff.tif"
+}

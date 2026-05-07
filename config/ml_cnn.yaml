@@ -1,12 +1,30 @@
 data:
   dir: /mnt/c/Users/amehedi/Downloads/ml_debris/output/thomas
   target_name: dem_diff.tif
-  include_glob: "*.tif"
-  exclude_contains:
-    - pred
-  exclude_names:
-    - dem_pre.tif
-    - dem_post.tif
+  include_names:
+    - burn__severity.tif
+    - cation__exchange_capacity.tif
+    - clay__total.tif
+    - dry__bulk_density.tif
+    - field__capacity.tif
+    - landcover.tif
+    - pH.tif
+    - porosity.tif
+    - sand__total.tif
+    - saturated__water_content.tif
+    - silt__total.tif
+    - soil__density.tif
+    - soil__internal_friction_angle.tif
+    - soil__maximum_total_cohesion.tif
+    - soil__minimum_total_cohesion.tif
+    - soil__mode_total_cohesion.tif
+    - soil__saturated_hydraulic_conductivity.tif
+    - soil__texture.tif
+    - soil__thickness.tif
+    - soil__transmissivity.tif
+    - topographic__elevation.tif
+    - vegetation__plant_functional_type.tif
+    - wilting__point.tif
 
 split:
   train_size: 0.7
@@ -32,3 +50,6 @@ training:
 output:
   model_dir: models/cnn
   run_prefix: cnn
+
+runtime:
+  device: auto

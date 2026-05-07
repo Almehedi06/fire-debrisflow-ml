@@ -22,17 +22,24 @@ def discover_feature_paths(
 
     if include_names:
         paths = []
+        seen: set[str] = set()
         for name in include_names:
+            if name in seen:
+                raise ValueError(f"Duplicate feature listed in include_names: {name}")
+            seen.add(name)
+            if name in excluded:
+                raise ValueError(
+                    f"Explicitly requested feature is excluded or reserved as target: {name}"
+                )
             p = root / name
             if not p.exists():
                 raise FileNotFoundError(f"Requested feature not found: {p}")
-            if p.name in excluded:
-                continue
             lname = p.name.lower()
             if exclude_terms and any(term in lname for term in exclude_terms):
-                continue
+                raise ValueError(
+                    f"Explicitly requested feature matches exclude_contains filter: {p.name}"
+                )
             paths.append(p)
-        paths = sorted(paths)
         if not paths:
             raise ValueError("No feature rasters left after include/exclude filtering.")
         return paths

@@ -23,6 +23,7 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--data-dir", default=None, help="Override raster data directory.")
     parser.add_argument("--target", default=None, help="Override target TIFF filename.")
     parser.add_argument("--model-root", default=None, help="Override model output root directory.")
+    parser.add_argument("--device", default=None, help="Override runtime device: auto, cpu, cuda, or cuda:<index>.")
     return parser.parse_args()
 
 
@@ -39,6 +40,9 @@ def main() -> None:
     output_cfg = cfg.get("output", {})
     model_cfg = cfg.get("model", {})
     training_cfg = cfg.get("training", {})
+    runtime_cfg = cfg.setdefault("runtime", {})
+    if args.device is not None:
+        runtime_cfg["device"] = args.device
 
     data_dir = Path(args.data_dir or data_cfg.get("dir"))
     target_name = args.target or data_cfg.get("target_name", "dem_diff.tif")
@@ -77,12 +81,15 @@ def main() -> None:
         "num_layers": int(model_cfg.get("num_layers", 5)),
         "patch_size": int(training_cfg.get("patch_size", 128)),
         "stride": int(training_cfg.get("stride", 64)),
+        "device_requested": artifacts.device_requested,
+        "device_resolved": artifacts.device_resolved,
         "norm_mean": artifacts.norm_mean.tolist(),
         "norm_std": artifacts.norm_std.tolist(),
     }
     model_path = run_dir / "model.pt"
     torch.save(checkpoint, model_path)
 
+    save_json(artifacts.best_val_metrics, run_dir / "metrics_val.json")
     save_json(artifacts.test_metrics, run_dir / "metrics_test.json")
     save_json({"history": artifacts.history}, run_dir / "history.json")
     save_json(artifacts.split_summary, run_dir / "split_summary.json")
@@ -100,9 +107,13 @@ def main() -> None:
     copy_config(args.config, run_dir / "train_config.yaml")
 
     print("Saved model:", model_path)
+    print("Saved val metrics:", run_dir / "metrics_val.json")
     print("Saved metrics:", run_dir / "metrics_test.json")
     print("Saved history:", run_dir / "history.json")
     print("Saved split:", run_dir / "split_summary.json")
+    print("Device:", artifacts.device_resolved, f"(requested: {artifacts.device_requested})")
+    print("Best epoch:", artifacts.best_epoch)
+    print("Best Val RMSE:", artifacts.best_val_metrics["rmse"])
     print("Test R2:", artifacts.test_metrics["r2"])
     print("Test RMSE:", artifacts.test_metrics["rmse"])
     print("Test MAE:", artifacts.test_metrics["mae"])

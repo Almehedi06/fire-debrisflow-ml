@@ -1,0 +1,33 @@
+{
+  "data_dir": "/mnt/c/Users/amehedi/Downloads/ml_debris/output/thomas",
+  "feature_order_path": "models/xgb/xgb_20260325_011442/feature_order.json",
+  "grid_resolution": 50,
+  "max_samples": 50000,
+  "model_path": "models/xgb/xgb_20260325_011442/model.joblib",
+  "random_state": 42,
+  "selected_features": [
+    "burn__severity",
+    "cation__exchange_capacity",
+    "clay__total",
+    "dry__bulk_density",
+    "field__capacity",
+    "landcover",
+    "pH",
+    "porosity",
+    "sand__total",
+    "saturated__water_content",
+    "silt__total",
+    "soil__density",
+    "soil__internal_friction_angle",
+    "soil__maximum_total_cohesion",
+    "soil__minimum_total_cohesion",
+    "soil__mode_total_cohesion",
+    "soil__saturated_hydraulic_conductivity",
+    "soil__texture",
+    "soil__thickness",
+    "soil__transmissivity"
+  ],
+  "split_random_state": 42,
+  "split_test_size": 0.2,
+  "target_name": "dem_diff.tif"
+}

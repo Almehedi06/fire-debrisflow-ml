@@ -1,0 +1,15 @@
+{
+  "data_dir": "/mnt/c/Users/amehedi/Downloads/ml_debris/output/thomas",
+  "feature_order_path": "models/xgb/xgb_20260325_012255/feature_order.json",
+  "max_samples": 50000,
+  "model_path": "models/xgb/xgb_20260325_012255/model.joblib",
+  "n_features": 23,
+  "n_jobs_requested": -1,
+  "n_jobs_used": -1,
+  "n_repeats": 10,
+  "random_state": 42,
+  "scoring": "r2",
+  "split_random_state": 42,
+  "split_test_size": 0.2,
+  "target_name": "dem_diff.tif"
+}

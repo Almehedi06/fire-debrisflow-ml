@@ -1,0 +1,68 @@
+data:
+  dir: /mnt/c/Users/amehedi/Downloads/ml_debris/output/thomas
+  target_name: dem_diff.tif
+  include_names:
+    - burn__severity.tif
+    # - cation__exchange_capacity.tif
+    # - clay__total.tif
+    # - dry__bulk_density.tif
+    # - field__capacity.tif
+    - landcover.tif
+    # - pH.tif
+    # - porosity.tif
+    # - sand__total.tif
+    - saturated__water_content.tif
+    - silt__total.tif
+    - soil__density.tif
+    - soil__internal_friction_angle.tif
+    - soil__maximum_total_cohesion.tif
+    - soil__minimum_total_cohesion.tif
+    - soil__mode_total_cohesion.tif
+    - soil__saturated_hydraulic_conductivity.tif
+    - soil__texture.tif
+    - soil__thickness.tif
+    - soil__transmissivity.tif
+    - topographic__elevation.tif
+    # - vegetation__plant_functional_type.tif
+    - wilting__point.tif
+
+split:
+  train_size: 0.6
+  val_size: 0.20
+  test_size: 0.20
+  block_size: 128
+  random_state: 42
+
+model:
+  type: unet
+  base_channels: 16
+
+training:
+  patch_size: 64
+  stride: 16
+  min_valid_fraction: 0.025
+  batch_size: 16
+  epochs: 300
+  learning_rate: 0.003
+  weight_decay: 0.0001
+  loss: huber
+  huber_delta: 0.5
+  checkpoint_metric: rmse
+
+tuning:
+  selection_metric: rmse
+  # search_space:
+  #   model.base_channels: [16, 32]
+  #   split.block_size: [128, 192]
+  #   training.patch_size: [32, 64]
+  #   training.stride: [8, 16]
+  #   training.learning_rate: [0.0003, 0.001]
+  #   training.weight_decay: [0.0001, 0.00001]
+
+output:
+  model_dir: models/unet
+  run_prefix: unet
+  tuning_dir: models/unet_tuning
+
+runtime:
+  device: auto

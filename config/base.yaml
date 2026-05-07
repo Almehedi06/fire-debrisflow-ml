@@ -2,15 +2,15 @@
 # Spatial inputs / AOI
 # ----------------------------
 aoi:
-  aoi: /mnt/c/Users/amehedi/Downloads/ml_debris/input/eagle/eagle_creek_watershed.shp
+  aoi: /mnt/c/Users/amehedi/Downloads/eaglecreek/eaglecreek.shp
 
 # ------------------
 # ----------
 # Data directories
 # ----------------------------
 paths:
-  input_dir: /mnt/c/Users/amehedi/Downloads/ml_debris/input/eagle
-  output_dir: /mnt/c/Users/amehedi/Downloads/ml_debris/output/eagle
+  input_dir: /mnt/c/Users/amehedi/Downloads/eaglecreek
+  output_dir: /mnt/c/Users/amehedi/Downloads/eaglecreek/output
 
 # ----------------------------
 # Model inputs (feature switches)
